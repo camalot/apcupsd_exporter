@@ -46,20 +46,20 @@ var _ prometheus.Collector = &UPSCollector{}
 
 // NewUPSCollector creates a new UPSCollector.
 func NewUPSCollector(ss StatusSource) *UPSCollector {
-	labels := []string{"hostname", "ups_name", "model"}
+	labels := []string{"ups_name", "hostname", "model"}
 
 	return &UPSCollector{
 		Info: prometheus.NewDesc(
 			prometheus.BuildFQName(namespace, "", "info"),
 			"Metadata about a given UPS.",
-			[]string{"ups", "hostname", "model"},
+			[]string{"ups_name", "hostname", "model"},
 			nil,
 		),
 
 		Status: prometheus.NewDesc(
 			prometheus.BuildFQName(namespace, "", "status"),
 			"Current UPS status.",
-			[]string{"hostname", "ups_name", "model", "status"},
+			[]string{"ups_name", "hostname", "model", "status"},
 			nil,
 		),
 
