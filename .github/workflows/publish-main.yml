@@ -43,8 +43,9 @@ jobs:
       id: prep
       run: |
         GHCR_IMAGE="ghcr.io/${{ github.repository }}";
-        DOCKER_IMAGE="${{ secrets.DOCKERHUB_USERNAME }}/apcupsd-exporter"
-        TAGSZ="${DOCKER_IMAGE}:latest,${DOCKER_IMAGE}:${{ needs.version.outputs.app_version }},${GHCR_IMAGE}:latest,${GHCR_IMAGE}:${{ needs.version.outputs.app_version }}";
+        # DOCKER_IMAGE="${{ secrets.DOCKERHUB_USERNAME }}/apcupsd-exporter"
+        # TAGSZ="${DOCKER_IMAGE}:latest,${DOCKER_IMAGE}:${{ needs.version.outputs.app_version }},${GHCR_IMAGE}:latest,${GHCR_IMAGE}:${{ needs.version.outputs.app_version }}";
+        # TAGSZ="${GHCR_IMAGE}:latest,${GHCR_IMAGE}:${{ needs.version.outputs.app_version }}";
         BUILD_DATEZ="$(date +'%Y-%m-%dT%TZ%z' -u)";
         PROJECT_NAMEZ=`echo "${{ github.repository }}" | awk '{split($0,a,"/"); print a[2]}' | sed 's/_/-/g'`;
         echo BUILD_TAGS=${TAGSZ} >> $GITHUB_ENV;
