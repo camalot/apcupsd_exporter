@@ -2,6 +2,7 @@ package apcupsdexporter
 
 import (
 	"log"
+	"strings"
 	"time"
 
 	"github.com/mdlayher/apcupsd"
@@ -35,6 +36,7 @@ type UPSCollector struct {
 	LastTransferOffBatteryTimeSeconds   *prometheus.Desc
 	LastSelftestTimeSeconds             *prometheus.Desc
 	NominalPowerWatts                   *prometheus.Desc
+	Status                              *prometheus.Desc
 	InternalTemperatureCelsius          *prometheus.Desc
 
 	ss StatusSource
@@ -44,13 +46,20 @@ var _ prometheus.Collector = &UPSCollector{}
 
 // NewUPSCollector creates a new UPSCollector.
 func NewUPSCollector(ss StatusSource) *UPSCollector {
-	labels := []string{"ups"}
+	labels := []string{"hostname", "ups_name", "model"}
 
 	return &UPSCollector{
 		Info: prometheus.NewDesc(
 			prometheus.BuildFQName(namespace, "", "info"),
 			"Metadata about a given UPS.",
-			[]string{"ups", "hostname", "model", "status"},
+			[]string{"ups", "hostname", "model"},
+			nil,
+		),
+
+		Status: prometheus.NewDesc(
+			prometheus.BuildFQName(namespace, "", "status"),
+			"Current UPS status.",
+			[]string{"hostname", "ups_name", "model", "status"},
 			nil,
 		),
 
@@ -175,6 +184,7 @@ func NewUPSCollector(ss StatusSource) *UPSCollector {
 func (c *UPSCollector) Describe(ch chan<- *prometheus.Desc) {
 	ds := []*prometheus.Desc{
 		c.Info,
+		c.Status,
 		c.UPSLoadPercent,
 		c.BatteryChargePercent,
 		c.LineVolts,
@@ -208,123 +218,152 @@ func (c *UPSCollector) Collect(ch chan<- prometheus.Metric) {
 		return
 	}
 
+	upsStatus := []string{
+		"CAL",
+		"TRIM",
+		"BOOST",
+		"ONLINE",
+		"ONBATT",
+		"OVERLOAD",
+		"LOWBATT",
+		"REPLACEBATT",
+		"NOBATT",
+		"SLAVE",
+		"SLAVEDOWN",
+		"COMMLOST",
+		"SHUTTINGDOWN",
+	}
+
+	for _, status := range upsStatus {
+		value := float64(0)
+		if strings.Contains(s.Status, status) {
+			value = float64(1)
+		}
+		ch <- prometheus.MustNewConstMetric(
+			c.Status,
+			prometheus.GaugeValue,
+			value,
+			s.UPSName, s.Hostname, s.Model, status,
+		)
+	}
+
 	ch <- prometheus.MustNewConstMetric(
 		c.Info,
 		prometheus.GaugeValue,
 		1,
-		s.UPSName, s.Hostname, s.Model, s.Status,
+		s.UPSName, s.Hostname, s.Model,
 	)
 
 	ch <- prometheus.MustNewConstMetric(
 		c.UPSLoadPercent,
 		prometheus.GaugeValue,
 		s.LoadPercent,
-		s.UPSName,
+		s.UPSName, s.Hostname, s.Model,
 	)
 
 	ch <- prometheus.MustNewConstMetric(
 		c.BatteryChargePercent,
 		prometheus.GaugeValue,
 		s.BatteryChargePercent,
-		s.UPSName,
+		s.UPSName, s.Hostname, s.Model,
 	)
 
 	ch <- prometheus.MustNewConstMetric(
 		c.LineVolts,
 		prometheus.GaugeValue,
 		s.LineVoltage,
-		s.UPSName,
+		s.UPSName, s.Hostname, s.Model,
 	)
 
 	ch <- prometheus.MustNewConstMetric(
 		c.LineNominalVolts,
 		prometheus.GaugeValue,
 		s.NominalInputVoltage,
-		s.UPSName,
+		s.UPSName, s.Hostname, s.Model,
 	)
 
 	ch <- prometheus.MustNewConstMetric(
 		c.OutputVolts,
 		prometheus.GaugeValue,
 		s.OutputVoltage,
-		s.UPSName,
+		s.UPSName, s.Hostname, s.Model,
 	)
 
 	ch <- prometheus.MustNewConstMetric(
 		c.BatteryVolts,
 		prometheus.GaugeValue,
 		s.BatteryVoltage,
-		s.UPSName,
+		s.UPSName, s.Hostname, s.Model,
 	)
 
 	ch <- prometheus.MustNewConstMetric(
 		c.BatteryNominalVolts,
 		prometheus.GaugeValue,
 		s.NominalBatteryVoltage,
-		s.UPSName,
+		s.UPSName, s.Hostname, s.Model,
 	)
 
 	ch <- prometheus.MustNewConstMetric(
 		c.BatteryNumberTransfersTotal,
 		prometheus.CounterValue,
 		float64(s.NumberTransfers),
-		s.UPSName,
+		s.UPSName, s.Hostname, s.Model,
 	)
 
 	ch <- prometheus.MustNewConstMetric(
 		c.BatteryTimeLeftSeconds,
 		prometheus.GaugeValue,
 		s.TimeLeft.Seconds(),
-		s.UPSName,
+		s.UPSName, s.Hostname, s.Model,
 	)
 
 	ch <- prometheus.MustNewConstMetric(
 		c.BatteryTimeOnSeconds,
 		prometheus.GaugeValue,
 		s.TimeOnBattery.Seconds(),
-		s.UPSName,
+		s.UPSName, s.Hostname, s.Model,
 	)
 
 	ch <- prometheus.MustNewConstMetric(
 		c.BatteryCumulativeTimeOnSecondsTotal,
 		prometheus.CounterValue,
 		s.CumulativeTimeOnBattery.Seconds(),
-		s.UPSName,
+		s.UPSName, s.Hostname, s.Model,
 	)
 
 	ch <- prometheus.MustNewConstMetric(
 		c.LastTransferOnBatteryTimeSeconds,
 		prometheus.GaugeValue,
 		timestamp(s.XOnBattery),
-		s.UPSName,
+		s.UPSName, s.Hostname, s.Model,
 	)
 
 	ch <- prometheus.MustNewConstMetric(
 		c.LastTransferOffBatteryTimeSeconds,
 		prometheus.GaugeValue,
 		timestamp(s.XOffBattery),
-		s.UPSName,
+		s.UPSName, s.Hostname, s.Model,
 	)
 
 	ch <- prometheus.MustNewConstMetric(
 		c.LastSelftestTimeSeconds,
 		prometheus.GaugeValue,
 		timestamp(s.LastSelftest),
-		s.UPSName,
+		s.UPSName, s.Hostname, s.Model,
 	)
 
 	ch <- prometheus.MustNewConstMetric(
 		c.NominalPowerWatts,
 		prometheus.GaugeValue,
 		float64(s.NominalPower),
-		s.UPSName,
+		s.UPSName, s.Hostname, s.Model,
 	)
 
 	ch <- prometheus.MustNewConstMetric(
 		c.InternalTemperatureCelsius,
 		prometheus.GaugeValue,
 		s.InternalTemp,
-		s.UPSName,
+		s.UPSName, s.Hostname, s.Model,
 	)
 }
 
