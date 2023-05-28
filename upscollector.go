@@ -219,19 +219,19 @@ func (c *UPSCollector) Collect(ch chan<- prometheus.Metric) {
 	}
 
 	upsStatus := []string{
-		"CAL",
-		"TRIM",
-		"BOOST",
-		"ONLINE",
-		"ONBATT",
-		"OVERLOAD",
-		"LOWBATT",
-		"REPLACEBATT",
-		"NOBATT",
-		"SLAVE",
-		"SLAVEDOWN",
-		"COMMLOST",
-		"SHUTTINGDOWN",
+		"CAL",           // Calibration mode
+		"TRIM",          // Smart trim active
+		"BOOST",         // Smart boost active
+		"ONLINE",        // UPS is online
+		"ONBATT",        // UPS is on battery
+		"OVERLOAD",      // UPS is overloaded
+		"LOWBATT",       // UPS has a low battery
+		"REPLACEBATT",   // UPS battery needs to be replaced
+		"NOBATT",        // UPS has no battery
+		"SLAVE",         // UPS is a slave
+		"SLAVEDOWN",     // UPS is a slave and is down
+		"COMMLOST",      // Communication has been lost
+		"SHUTTING DOWN", // UPS is shutting down
 	}
 
 	for _, status := range upsStatus {
