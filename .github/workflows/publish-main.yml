@@ -90,13 +90,13 @@ jobs:
     steps:
 
     - uses: actions/checkout@v3
-    - name: Merge develop -> master
-      uses: devmasx/merge-branch@1.4.0
-      with:
-        type: now
-        from_branch: develop
-        target_branch: master
-        github_token: ${{ github.token }}
+    # - name: Merge develop -> main
+    #   uses: devmasx/merge-branch@1.4.0
+    #   with:
+    #     type: now
+    #     from_branch: develop
+    #     target_branch: main
+    #     github_token: ${{ github.token }}
     # https://github.com/marketplace/actions/create-tag
     - name: Create Tag
       uses: negz/create-tag@v1
